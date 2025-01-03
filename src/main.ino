@@ -14,7 +14,7 @@ const char *password = "youdontknow6";
 
 // FM Radio
 Si4703_Breakout radio(ESP32_RESET_PIN, ESP32_I2C_SDA, ESP32_I2C_SCL);
-int channel = 974; // Example initial channel
+int channel = 941; // Example initial channel
 char rdsBuffer[10];
 
 // Audio Tools
