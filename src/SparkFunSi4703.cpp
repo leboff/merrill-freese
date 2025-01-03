@@ -141,6 +141,7 @@ void Si4703_Breakout::si4703_init()
   si4703_registers[SYSCONFIG1] |= (1<<RDS); //Enable RDS
 
   si4703_registers[SYSCONFIG1] |= (1<<DE); //50kHz Europe setup
+  // si4703_registers[SYSCONFIG1] &= ~(1<<DE); // Disable de-emphasis
   si4703_registers[SYSCONFIG2] |= (1<<SPACE0); //100kHz channel spacing for Europe
 
   si4703_registers[SYSCONFIG2] &= 0xFFF0; //Clear volume bits
