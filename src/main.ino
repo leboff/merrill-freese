@@ -19,11 +19,10 @@ int channel = 941; // Example initial channel
 AudioInfo info(44100, 1, 16); // 44100 Hz sample rate, mono, 16-bit
 AnalogAudioStream analogStream;  // ADC Stream
 AudioEncoderServer server(new WAVEncoder(), ssid, password);
-
 void setup() {
     Serial.begin(115200);
-    AudioLogger::instance().begin(Serial,AudioLogger::Info);
-
+    AudioToolsLogger.begin(Serial, AudioToolsLogLevel::Info); //Warning, Info, Error, Debug
+ 
     // Initialize FM Radio
     radio.powerOn();
     radio.setVolume(15);
@@ -40,11 +39,12 @@ void setup() {
     analogStream.begin(cfg);
 
     // Start Web Server (using WAV encoder)
-    server.begin(analogStream, cfg);
-    // Serial.println("Server started");
+    server.begin(analogStream, 36000, 1, 16);
+    Serial.println("Server started");
+    AudioToolsLogger.begin(Serial, AudioToolsLogLevel::Warning); 
 }
 
 void loop() {
     // Handle Web Server
-    server.doLoop();
+    server.doLoop(); 
 }
