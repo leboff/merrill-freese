@@ -16,7 +16,7 @@ const char *password = "youdontknow6";
 Si4703_Breakout radio(ESP32_RESET_PIN, ESP32_I2C_SDA, ESP32_I2C_SCL);
 int channel = 941; // Example initial channel
 
-AudioInfo info(8000, 2, 32); // 44100 Hz sample rate, mono, 16-bit
+AudioInfo info(8000, 2, 32); 
 I2SStream i2sStream;
 AudioEncoderServer server(new WAVEncoder(), ssid, password);
 void setup() {
