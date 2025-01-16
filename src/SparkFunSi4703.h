@@ -59,6 +59,7 @@ class Si4703_Breakout
 									// message should be at least 9 chars
 									// result will be null terminated
 									// timeout in milliseconds
+  int getCurrentChannel() { return getChannel(); } // Add this line
   private:
     int  _resetPin;
 	int  _sdioPin;
