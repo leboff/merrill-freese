@@ -16,11 +16,9 @@ const char *password = "youdontknow6";
 Si4703_Breakout radio(ESP32_RESET_PIN, ESP32_I2C_SDA, ESP32_I2C_SCL);
 int channel = 941; // Example initial channel
 
-AudioInfo info(8000, 1, 32); // 44100 Hz sample rate, mono, 16-bit
+AudioInfo info(8000, 2, 32); // 44100 Hz sample rate, mono, 16-bit
 I2SStream i2sStream;
-CsvOutput<int24_t> csvStream(Serial);
 AudioEncoderServer server(new WAVEncoder(), ssid, password);
-StreamCopy copier(csvStream, i2sStream); // copy i2sStream to csvStream
 void setup() {
     Serial.begin(115200);
     AudioToolsLogger.begin(Serial, AudioToolsLogLevel::Info); //Warning, Info, Error, Debug
@@ -47,11 +45,10 @@ void setup() {
     server.begin(i2sStream, info);
     // csvStream.begin(info);
     Serial.println("Server started");
-    // AudioToolsLogger.begin(Serial, AudioToolsLogLevel::Warning); 
+    AudioToolsLogger.begin(Serial, AudioToolsLogLevel::Warning); 
 }
 
 void loop() {
     // Handle Web Server
     server.doLoop(); 
-    // copier.copy();
 }
