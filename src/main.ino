@@ -18,7 +18,9 @@ int channel = 941; // Example initial channel
 
 AudioInfo info(44100, 1, 24); // 44100 Hz sample rate, mono, 16-bit
 I2SStream i2sStream;
+CsvOutput<int24_t> csvStream(Serial);
 AudioEncoderServer server(new WAVEncoder(), ssid, password);
+StreamCopy copier(csvStream, i2sStream); // copy i2sStream to csvStream
 void setup() {
     Serial.begin(115200);
     AudioToolsLogger.begin(Serial, AudioToolsLogLevel::Info); //Warning, Info, Error, Debug
@@ -33,16 +35,16 @@ void setup() {
     cfg.i2s_format = I2S_PHILIPS_FORMAT;
     cfg.is_master = true;
     // this module nees a master clock if the ESP32 is master
-    cfg.use_apll = true; // try with yes
+    cfg.use_apll = false; // try with yes
     cfg.pin_mck = 3;
-    cfg.pin_bck = 2;
+    cfg.pin_bck = 14;
     cfg.pin_ws = 15;
-    cfg.pin_data = 4;
+    cfg.pin_data = 32;
 
     i2sStream.begin(cfg);
 
     // Start Web Server (using WAV encoder)
-    server.begin(i2sStream, 44100, 1, 16);
+    server.begin(i2sStream, info);
     // csvStream.begin(info);
     Serial.println("Server started");
     AudioToolsLogger.begin(Serial, AudioToolsLogLevel::Warning); 
