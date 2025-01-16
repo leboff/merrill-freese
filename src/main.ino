@@ -16,7 +16,7 @@ const char *password = "youdontknow6";
 Si4703_Breakout radio(ESP32_RESET_PIN, ESP32_I2C_SDA, ESP32_I2C_SCL);
 int channel = 941; // Example initial channel
 
-AudioInfo info(44100, 1, 24); // 44100 Hz sample rate, mono, 16-bit
+AudioInfo info(8000, 1, 32); // 44100 Hz sample rate, mono, 16-bit
 I2SStream i2sStream;
 CsvOutput<int24_t> csvStream(Serial);
 AudioEncoderServer server(new WAVEncoder(), ssid, password);
@@ -32,10 +32,10 @@ void setup() {
     // Configure ADC
     auto cfg = i2sStream.defaultConfig(RX_MODE);
     cfg.copyFrom(info);
-    cfg.i2s_format = I2S_PHILIPS_FORMAT;
+    cfg.i2s_format = I2S_STD_FORMAT;
     cfg.is_master = true;
     // this module nees a master clock if the ESP32 is master
-    cfg.use_apll = false; // try with yes
+    cfg.use_apll = true; // try with yes
     cfg.pin_mck = 3;
     cfg.pin_bck = 14;
     cfg.pin_ws = 15;
@@ -47,7 +47,7 @@ void setup() {
     server.begin(i2sStream, info);
     // csvStream.begin(info);
     Serial.println("Server started");
-    AudioToolsLogger.begin(Serial, AudioToolsLogLevel::Warning); 
+    // AudioToolsLogger.begin(Serial, AudioToolsLogLevel::Warning); 
 }
 
 void loop() {
