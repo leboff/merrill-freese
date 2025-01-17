@@ -28,6 +28,7 @@ void setup() {
   wavServer.begin(i2sStream, audioInfo);
 
   Serial.println("Setup complete");
+  AudioToolsLogger.begin(Serial, AudioToolsLogLevel::Warning);
 }
 
 void loop() {

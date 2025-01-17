@@ -30,7 +30,7 @@ void Si4703_Breakout::setChannel(int channel)
   si4703_registers[CHANNEL] |= (1<<TUNE); //Set the TUNE bit to start
   updateRegisters();
 
-  //delay(60); //Wait 60ms - you can use or skip this delay
+  delay(60); //Wait 60ms - you can use or skip this delay
 
   //Poll to see if STC is set
   while(1) {
@@ -141,7 +141,7 @@ void Si4703_Breakout::si4703_init()
   si4703_registers[SYSCONFIG1] |= (1<<RDS); //Enable RDS
 
   // si4703_registers[SYSCONFIG1] |= (1<<DE); //50kHz Europe setup
-  si4703_registers[SYSCONFIG1] &= ~(1<<DE); // Disable de-emphasis
+  si4703_registers[SYSCONFIG1] |= (1<<DE); // Enable de-emphasis (USA)
   si4703_registers[SYSCONFIG2] |= (1<<SPACE0); //100kHz channel spacing for Europe
 
   si4703_registers[SYSCONFIG2] &= 0xFFF0; //Clear volume bits
