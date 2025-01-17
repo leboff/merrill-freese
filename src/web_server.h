@@ -4,9 +4,11 @@
 #include <WebServer.h>
 #include "AudioTools.h"
 
-extern WebServer webServer;
-extern AudioEncoder* audioEncoder;
-extern EncodedAudioOutput encodedStream;
+// forward declarations
+// extern StreamCopy *copier; // removed as no longer needed
+// extern WAVEncoder *wavEncoder; // removed as no longer needed
+// extern EncodedAudioOutput *encodedStream; // removed as no longer needed
+extern WebServer webServer; 
 
 void initWebServer();
 void handleRoot();
@@ -16,6 +18,6 @@ void handleSeekUp();
 void handleSeekDown();
 void handleRDS();
 void handleNotFound();
-void handleAudioStream();
+// void handleAudioStream(); // removed as no longer needed
 
 #endif

@@ -3,11 +3,12 @@
 
 #include <SparkFunSi4703.h>
 
-extern Si4703_Breakout radio; // Declare radio as extern
+// moved radio into the cpp file as it is not needed here
+// extern Si4703_Breakout radio; // Declare radio as extern
 extern int channel;
 extern int volume;
 
-void initRadio(Si4703_Breakout& radio);
+void initRadio();
 void setRadioVolume(int volume);
 void setRadioChannel(int channel);
 void seekRadioUp();

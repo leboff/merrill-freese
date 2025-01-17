@@ -6,6 +6,6 @@
 extern AudioInfo audioInfo;
 extern I2SStream i2sStream;
 
-void initAudio(I2SStream& i2sStream);
+void initAudio();
 
 #endif

@@ -3,7 +3,8 @@
 #include "audio_stream.h"
 #include "config.h"
 
-Si4703_Breakout radio(ESP32_RESET_PIN, ESP32_I2C_SDA, ESP32_I2C_SCL);
+
+AudioWAVServer wavServer(81);
 void setup() {
   Serial.begin(115200);
   AudioToolsLogger.begin(Serial, AudioToolsLogLevel::Info);
@@ -18,18 +19,20 @@ void setup() {
   Serial.println(WiFi.localIP());
   
   // Initialize FM Radio
-  initRadio(radio);
+  initRadio();
 
-  initAudio(i2sStream);
+  initAudio();
   
   initWebServer();
 
+  wavServer.begin(i2sStream, audioInfo);
+
   Serial.println("Setup complete");
-  AudioToolsLogger.begin(Serial, AudioToolsLogLevel::Warning);
 }
 
 void loop() {
   // Handle Web Server requests
-  webServer.handleClient();
+    webServer.handleClient(); 
+    wavServer.copy();
 
 }

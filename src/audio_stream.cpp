@@ -4,7 +4,7 @@
 AudioInfo audioInfo(8000, 2, 32); // Match the settings in config.h
 I2SStream i2sStream;
 
-void initAudio(I2SStream& i2sStream) {
+void initAudio() {
   auto cfg = i2sStream.defaultConfig(RX_MODE);
   cfg.copyFrom(audioInfo);
   cfg.i2s_format = I2S_STD_FORMAT;
