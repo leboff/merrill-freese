@@ -3,9 +3,6 @@
 #include "config.h"
 #include "audio_stream.h"
 
-// Include necessary AudioTools headers
-#include "AudioTools.h"
-
 WebServer webServer(80);
 
 void initWebServer() {
@@ -15,6 +12,7 @@ void initWebServer() {
   webServer.on("/seekup", handleSeekUp);
   webServer.on("/seekdown", handleSeekDown);
   webServer.on("/rds", handleRDS);
+  webServer.on("/info", handleRadioInfo); // Add this line
   webServer.begin();
 }
 
@@ -55,6 +53,11 @@ void handleSeekDown() {
 void handleRDS() {
   String rdsData = getRDSData();
   webServer.send(200, "text/plain", rdsData);
+}
+
+void handleRadioInfo() {
+  String info = getRadioInfo();
+  webServer.send(200, "text/plain", info);
 }
 
 void handleNotFound() {

@@ -1,10 +1,9 @@
 #ifndef RADIO_CONTROL_H
 #define RADIO_CONTROL_H
 
-#include <SparkFunSi4703.h>
+#include "SI4703.h"
 
-// moved radio into the cpp file as it is not needed here
-// extern Si4703_Breakout radio; // Declare radio as extern
+extern SI4703 radio; // Declare the radio object
 extern int channel;
 extern int volume;
 
@@ -14,5 +13,6 @@ void setRadioChannel(int channel);
 void seekRadioUp();
 void seekRadioDown();
 String getRDSData();
+String getRadioInfo(); // Add this line
 
 #endif

@@ -17,6 +17,7 @@ void handleChannel();
 void handleSeekUp();
 void handleSeekDown();
 void handleRDS();
+void handleRadioInfo(); // Add this line
 void handleNotFound();
 // void handleAudioStream(); // removed as no longer needed
 

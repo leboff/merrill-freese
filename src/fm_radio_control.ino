@@ -17,7 +17,7 @@ void setup() {
   Serial.println();
   Serial.print("WiFi connected, IP address: ");
   Serial.println(WiFi.localIP());
-  
+
   // Initialize FM Radio
   initRadio();
 
@@ -33,7 +33,13 @@ void setup() {
 
 void loop() {
   // Handle Web Server requests
-    webServer.handleClient(); 
-    wavServer.copy();
+  webServer.handleClient(); 
+  wavServer.copy(); // Optional: Output radio info periodically
+  static unsigned long lastInfoPrint = 0;
+  if (millis() - lastInfoPrint > 5000) { // Every 5 seconds
+    String info = getRadioInfo();
+    Serial.println(info);
+    lastInfoPrint = millis();
+  }
 
 }

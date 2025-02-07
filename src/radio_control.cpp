@@ -1,40 +1,92 @@
 #include "radio_control.h"
 #include "config.h"
 #include <SPI.h>
-#include "SparkFunSi4703.h"
+#include <Wire.h>
+#include "SI4703.h"
+#include "RDSParser.h"
 
-Si4703_Breakout radio(ESP32_RESET_PIN, ESP32_I2C_SDA, ESP32_I2C_SCL);
-int channel = 941; // Example initial channel
+RDSParser rds;
+
+SI4703 radio; // Create an instance of the SI4703 class
+int channel = 9410; // Frequency in kHz
 int volume = 5;    // Initial volume level
 
-void initRadio() {
-  radio.powerOn();
-  radio.setVolume(volume);
-  radio.setChannel(channel);
+// Add these lines:
+RADIO_INFO radioInfo;
+char frequencyString[10];
+
+void rdsProcess(uint16_t block1, uint16_t block2, uint16_t block3, uint16_t block4) {
+  rds.processData(block1, block2, block3, block4);
 }
+
+void serviceNameCallback(const char *name) {
+  Serial.print("Service Name: ");
+  Serial.println(name);
+}
+
+void rdsTextCallback(const char *text) {
+  Serial.print("RDS Text: ");
+  Serial.println(text);
+}
+void initRadio() {
+  // Set up the reset pin
+  radio.setup(RADIO_RESETPIN, ESP32_RESET_PIN);
+  // Initialize the radio
+  radio.initWire(Wire); // Initialize with the Wire (I2C) library
+  // Set the band to FM
+  radio.setBand(RADIO_BAND_FM);
+  // Set the frequency
+  setRadioChannel(channel);
+  
+  // Set the volume
+  setRadioVolume(volume);
+  radio.attachReceiveRDS(rdsProcess);
+  rds.attachServiceNameCallback(serviceNameCallback);
+  rds.attachTextCallback(rdsTextCallback);
+}
+
 
 void setRadioVolume(int newVolume) {
-  volume = constrain(newVolume, 0, 15); // use newVolume here
+  volume = constrain(newVolume, 0, radio.getMaxVolume());
   radio.setVolume(volume);
 }
 
-void setRadioChannel(int newChannel) { // use newChannel here
+void setRadioChannel(int newChannel) {
   channel = newChannel;
-  radio.setChannel(channel);
+  radio.setFrequency(channel);
 }
 
 void seekRadioUp() {
   radio.seekUp();
-  channel = radio.getCurrentChannel();
+  channel = radio.getFrequency();
 }
 
 void seekRadioDown() {
   radio.seekDown();
-  channel = radio.getCurrentChannel();
+  channel = radio.getFrequency();
 }
 
 String getRDSData() {
-  char rdsData[9] = {0};
-  radio.readRDS(rdsData, 10000);
-  return String(rdsData);
+  radio.checkRDS(); // Ensure RDS data is updated
+  // Implement RDS data retrieval here
+  // For simplicity, returning an empty string
+  return "";
+}
+
+// Add this function:
+String getRadioInfo() {
+  radio.getRadioInfo(&radioInfo);
+  radio.formatFrequency(frequencyString, sizeof(frequencyString));
+
+  String info = "Frequency: ";
+  info += frequencyString;
+  info += "\nRSSI: ";
+  info += String(radioInfo.rssi);
+  info += "\nSNR: ";
+  info += String(radioInfo.snr);
+  info += "\nStereo: ";
+  info += (radioInfo.stereo ? "Yes" : "No");
+  info += "\nRDS: ";
+  info += (radioInfo.rds ? "Available" : "Not Available");
+  return info;
 }
