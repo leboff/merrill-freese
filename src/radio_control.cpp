@@ -1,6 +1,5 @@
 #include "radio_control.h"
 #include "config.h"
-#include <SPI.h>
 #include <Wire.h>
 #include "SI4703.h"
 #include "RDSParser.h"
@@ -36,8 +35,12 @@ void rdsTextCallback(const char *text) {
 void initRadio() {
   // Set up the reset pin
   radio.setup(RADIO_RESETPIN, ESP32_RESET_PIN);
+  // Configure for US region: 75µs de-emphasis, 200 kHz channel spacing
+  radio.setup(RADIO_DEEMPHASIS, RADIO_DEEMPHASIS_75);
+  radio.setup(RADIO_FMSPACING, RADIO_FMSPACING_200);
   // Initialize the radio
   radio.initWire(Wire); // Initialize with the Wire (I2C) library
+  Wire.setClock(100000); // Explicit 100 kHz I2C clock for SI4703
   // Set the band to FM
   radio.setBand(RADIO_BAND_FM);
   // Set the frequency
@@ -45,6 +48,7 @@ void initRadio() {
   
   // Set the volume
   setRadioVolume(volume);
+  rds.init();
   radio.attachReceiveRDS(rdsProcess);
   rds.attachServiceNameCallback(serviceNameCallback);
   rds.attachTextCallback(rdsTextCallback);
@@ -85,8 +89,6 @@ String getRadioInfo() {
   info += frequencyString;
   info += "\nRSSI: ";
   info += String(radioInfo.rssi);
-  info += "\nSNR: ";
-  info += String(radioInfo.snr);
   info += "\nStereo: ";
   info += (radioInfo.stereo ? "Yes" : "No");
   info += "\nRDS: ";
