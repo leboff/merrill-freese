@@ -7,7 +7,7 @@
 #define ESP32_I2C_SCL 22
 
 // I2S Connections
-#define I2S_PIN_MCK 0
+#define I2S_PIN_MCK 4
 #define I2S_PIN_BCK 14
 #define I2S_PIN_WS 15
 #define I2S_PIN_DATA 32

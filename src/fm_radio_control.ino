@@ -47,7 +47,12 @@ void setup() {
   xTaskCreatePinnedToCore(audioTask, "audio", 4096, NULL, 2, NULL, 1);
 
   // Enable hardware watchdog (10s timeout, auto-reset on hang)
-  esp_task_wdt_init(10, true);
+  esp_task_wdt_config_t wdt_config = {
+    .timeout_ms = 10000,
+    .idle_core_mask = 0,
+    .trigger_panic = true
+  };
+  esp_task_wdt_init(&wdt_config);
   esp_task_wdt_add(NULL);
 
   Serial.println("Setup complete");
