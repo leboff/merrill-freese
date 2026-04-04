@@ -507,13 +507,12 @@ void SI4703::_seek(bool seekUp) {
 void SI4703::_waitEnd() {
   DEBUG_FUNC0("_waitEnd");
 
-  // wait until STC gets high
+  // wait until STC gets high (timeout after 3 seconds)
+  unsigned long start = millis();
   do {
     _readRegister0A();
     delay(10);
-  } while ((registers[STATUSRSSI] & STC) == 0);
-
-  // DEBUG_VAL("Freq:", getFrequency());
+  } while ((registers[STATUSRSSI] & STC) == 0 && (millis() - start < 3000));
 
   _readRegisters();
   // get the SFBL bit.
@@ -525,10 +524,11 @@ void SI4703::_waitEnd() {
   registers[CHANNEL] &= ~(1 << TUNE);  // Clear the tune after a tune has completed
   _saveRegisters();
 
-  // wait until STC gets down again
+  // wait until STC gets down again (timeout after 1 second)
+  start = millis();
   do {
     _readRegisters();
-  } while ((registers[STATUSRSSI] & STC) != 0);
+  } while ((registers[STATUSRSSI] & STC) != 0 && (millis() - start < 1000));
 }  // _waitEnd()
 
 
