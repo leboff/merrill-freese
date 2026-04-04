@@ -14,5 +14,7 @@ void initAudio() {
   cfg.pin_bck = I2S_PIN_BCK;
   cfg.pin_ws = I2S_PIN_WS;
   cfg.pin_data = I2S_PIN_DATA;
-  i2sStream.begin(cfg);
+  if (!i2sStream.begin(cfg)) {
+    Serial.println("ERROR: I2S init failed - check pin assignments and ADC wiring");
+  }
 }
