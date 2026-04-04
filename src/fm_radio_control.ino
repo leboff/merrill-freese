@@ -3,11 +3,12 @@
 #include "audio_stream.h"
 #include "config.h"
 
-
 AudioWAVServer wavServer(81);
+
 void setup() {
   Serial.begin(115200);
   AudioToolsLogger.begin(Serial, AudioToolsLogLevel::Info);
+
   // Connect to Wi-Fi
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
@@ -30,16 +31,24 @@ void setup() {
   Serial.println("Setup complete");
   AudioToolsLogger.begin(Serial, AudioToolsLogLevel::Warning);
 }
-
 void loop() {
   // Handle Web Server requests
-  webServer.handleClient(); 
-  wavServer.copy(); // Optional: Output radio info periodically
+  webServer.handleClient();
+  wavServer.copy();
+
+  // RDS check every 40ms
+  static unsigned long lastRDSCheck = 0;
+  if (millis() - lastRDSCheck >= 40) {
+    radio.checkRDS();
+    lastRDSCheck = millis();
+  }
+
+  // Optional: Output radio info periodically
   static unsigned long lastInfoPrint = 0;
-  if (millis() - lastInfoPrint > 5000) { // Every 5 seconds
+  if (millis() - lastInfoPrint >= 5000) { // Every 5 seconds
     String info = getRadioInfo();
     Serial.println(info);
     lastInfoPrint = millis();
   }
-
 }
+

@@ -12,6 +12,9 @@ int channel = 9410; // Frequency in kHz
 int volume = 5;    // Initial volume level
 
 // Add these lines:
+String rdsServiceName = "";
+String rdsText = "";
+// Add these lines:
 RADIO_INFO radioInfo;
 char frequencyString[10];
 
@@ -22,11 +25,13 @@ void rdsProcess(uint16_t block1, uint16_t block2, uint16_t block3, uint16_t bloc
 void serviceNameCallback(const char *name) {
   Serial.print("Service Name: ");
   Serial.println(name);
+  rdsServiceName = name; // Store the service name
 }
 
 void rdsTextCallback(const char *text) {
   Serial.print("RDS Text: ");
   Serial.println(text);
+  rdsText = text; // Store the RDS text
 }
 void initRadio() {
   // Set up the reset pin
@@ -67,12 +72,10 @@ void seekRadioDown() {
 }
 
 String getRDSData() {
-  radio.checkRDS(); // Ensure RDS data is updated
-  // Implement RDS data retrieval here
-  // For simplicity, returning an empty string
-  return "";
+  // No need to call radio.checkRDS() here; we'll call it in the main loop
+  String rdsData = "Service Name: " + rdsServiceName + "\nRDS Text: " + rdsText;
+  return rdsData;
 }
-
 // Add this function:
 String getRadioInfo() {
   radio.getRadioInfo(&radioInfo);

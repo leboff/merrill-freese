@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FM Radio Web Interface</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #controls {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        button, input {
+            margin: 5px;
+            padding: 8px;
+        }
+        #radioInfo {
+            margin-top: 20px;
+            text-align: center;
+        }
+        #rdsDisplay {
+            margin-top: 10px;
+            font-weight: bold;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>FM Radio</h1>
+
+    <div id="rdsDisplay">RDS Data will appear here.</div>
+
+    <audio id="audioStream" controls autoplay>
+        <source src="http://192.168.50.24:81" type="audio/wav">
+        Your browser does not support the audio element.
+    </audio>
+
+    <div id="controls">
+        <div>
+            <label for="volume">Volume:</label>
+            <input type="range" id="volume" min="0" max="15" value="5">
+            <button onclick="setVolume()">Set Volume</button>
+        </div>
+        <div>
+            <label for="channel">Channel:</label>
+            <input type="number" id="channel" value="9410">
+            <button onclick="setChannel()">Set Channel</button>
+        </div>
+        <button onclick="seekUp()">Seek Up</button>
+        <button onclick="seekDown()">Seek Down</button>
+        <!-- You can remove the Get RDS Data button if you prefer automatic updates -->
+        <button onclick="getRDS()">Get RDS Data</button>
+    </div>
+
+    <div id="radioInfo">
+        <h3>Radio Information</h3>
+        <p id="infoDisplay">Loading...</p>
+    </div>
+
+    <script>
+        const ipAddress = "192.168.50.24";
+
+        function setVolume() {
+            const volume = document.getElementById("volume").value;
+            fetch(`http://${ipAddress}/volume?value=${volume}`)
+                .then(response => response.text())
+                .then(data => console.log(data))
+                .then(getRadioInfo)
+                .catch(error => console.error("Error:", error));
+        }
+
+        function setChannel() {
+            const channel = document.getElementById("channel").value;
+            fetch(`http://${ipAddress}/channel?value=${channel}`)
+                .then(response => response.text())
+                .then(data => console.log(data))
+                .then(getRadioInfo)
+                .catch(error => console.error("Error:", error));
+        }
+
+        function seekUp() {
+            fetch(`http://${ipAddress}/seekup`)
+                .then(response => response.text())
+                .then(data => console.log(data))
+                .then(getRadioInfo)
+                .catch(error => console.error("Error:", error));
+        }
+
+        function seekDown() {
+            fetch(`http://${ipAddress}/seekdown`)
+                .then(response => response.text())
+                .then(data => console.log(data))
+                .then(getRadioInfo)
+                .catch(error => console.error("Error:", error));
+        }
+
+        function getRDS() {
+            fetch(`http://${ipAddress}/rds`)
+                .then(response => response.text())
+                .then(data => {
+                    // Update the RDS display
+                    document.getElementById("rdsDisplay").innerText = data || "No RDS Data Available";
+                })
+                .catch(error => console.error("Error:", error));
+        }
+
+        function getRadioInfo() {
+            fetch(`http://${ipAddress}/info`)
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById("infoDisplay").innerText = data;
+                })
+                .catch(error => console.error("Error:", error));
+        }
+
+        // Fetch radio info and RDS data on page load
+        getRadioInfo();
+        getRDS();
+
+        // Refresh RDS data periodically (every 5 seconds)
+        setInterval(getRadioInfo, 5000); // Fetch RDS data every 5 seconds
+        setInterval(getRDS, 5000); // Fetch RDS data every 5 seconds
+    </script>
+</body>
+</html>

@@ -13,6 +13,7 @@ void initWebServer() {
   webServer.on("/seekdown", handleSeekDown);
   webServer.on("/rds", handleRDS);
   webServer.on("/info", handleRadioInfo); // Add this line
+  webServer.enableCORS();
   webServer.begin();
 }
 
