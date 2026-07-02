@@ -45,6 +45,9 @@ void setup() {
   Serial.print("WiFi connected, IP address: ");
   Serial.println(WiFi.localIP());
 
+  WiFi.setAutoReconnect(true);   // ESP32 SDK retries the AP automatically
+  WiFi.persistent(false);        // don't wear flash rewriting credentials
+
   // Initialize FM Radio
   initRadio();
 
@@ -72,6 +75,22 @@ void setup() {
 
 void loop() {
   esp_task_wdt_reset();
+
+  // WiFi self-recovery: restart if disconnected for > 5 minutes
+  static unsigned long wifiLostSince = 0;
+  if (WiFi.status() != WL_CONNECTED) {
+    if (wifiLostSince == 0) {
+      wifiLostSince = millis();
+      Serial.println("WiFi lost - waiting for auto-reconnect");
+    } else if (millis() - wifiLostSince > 5UL * 60UL * 1000UL) {
+      Serial.println("WiFi down > 5 min - restarting");
+      ESP.restart();
+    }
+  } else if (wifiLostSince != 0) {
+    wifiLostSince = 0;
+    Serial.print("WiFi reconnected, IP: ");
+    Serial.println(WiFi.localIP());
+  }
 
   // Handle Web Server requests
   webServer.handleClient();
