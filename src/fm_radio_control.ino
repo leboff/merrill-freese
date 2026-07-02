@@ -2,14 +2,25 @@
 #include "web_server.h"
 #include "audio_stream.h"
 #include "config.h"
+#include "AudioTools/Communication/HTTP/AudioServerWiFi.h"
 #include <esp_task_wdt.h>
 
 AudioWAVServer wavServer(81);
 
 // Dedicated audio streaming task on Core 1 to avoid I2C blocking stalls
 void audioTask(void *param) {
+  static uint32_t lastDiag = 0;
+  static uint32_t totalBytes = 0;
   for (;;) {
-    wavServer.copy();
+    bool active = wavServer.copy();
+    // Print bytes-per-second every 5s so we can see if data is flowing
+    if (millis() - lastDiag >= 5000) {
+      Serial.printf("[audio] streaming: %s, ~%u B/s\n",
+                    active ? "active" : "idle",
+                    totalBytes / 5);
+      totalBytes = 0;
+      lastDiag = millis();
+    }
     vTaskDelay(1);
   }
 }
