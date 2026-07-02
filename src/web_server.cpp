@@ -34,21 +34,30 @@ void handleVolume() {
 void handleChannel() {
   if (webServer.hasArg("value")) {
     int newChannel = webServer.arg("value").toInt();
-    setRadioChannel(newChannel);
-    webServer.send(200, "text/plain", "Channel set to " + String(newChannel));
+    if (!startTune(newChannel)) {
+      webServer.send(409, "text/plain", "tune in progress");
+      return;
+    }
+    webServer.send(200, "text/plain", "Tuning to " + String(newChannel));
   } else {
     webServer.send(400, "text/plain", "Bad Request: Missing 'value' parameter");
   }
 }
 
 void handleSeekUp() {
-  seekRadioUp();
-  webServer.send(200, "text/plain", "Seek Up, new channel: " + String(channel));
+  if (!startSeek(true)) {
+    webServer.send(409, "text/plain", "tune in progress");
+    return;
+  }
+  webServer.send(200, "text/plain", "Seeking up...");
 }
 
 void handleSeekDown() {
-  seekRadioDown();
-  webServer.send(200, "text/plain", "Seek Down, new channel: " + String(channel));
+  if (!startSeek(false)) {
+    webServer.send(409, "text/plain", "tune in progress");
+    return;
+  }
+  webServer.send(200, "text/plain", "Seeking down...");
 }
 
 void handleRDS() {

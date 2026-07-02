@@ -527,9 +527,72 @@ void SI4703::_waitEnd() {
   // wait until STC gets down again (timeout after 1 second)
   start = millis();
   do {
-    _readRegisters();
+    _readRegister0A();
+    delay(5);
   } while ((registers[STATUSRSSI] & STC) != 0 && (millis() - start < 1000));
+  _readRegisters();  // keep the register cache coherent
 }  // _waitEnd()
+
+
+/// Start a tune without blocking for completion. Replicates setFrequency()
+/// minus the _waitEnd() call; use tuneComplete() to poll for STC.
+void SI4703::tuneAsync(RADIO_FREQ newF) {
+  DEBUG_FUNC1("tuneAsync", newF);
+  if (newF < _freqLow)
+    newF = _freqLow;
+  if (newF > _freqHigh)
+    newF = _freqHigh;
+
+  _readRegisters();
+  int channel = (newF - _freqLow) / _freqSteps;
+
+  registers[CHANNEL] &= 0xFE00;       // Clear out the channel bits
+  registers[CHANNEL] |= channel;      // Mask in the new channel
+  registers[CHANNEL] |= (1 << TUNE);  // Set the TUNE bit to start
+  _saveRegisters();
+  if (_sendRDS) {
+    _sendRDS(0, 0, 0, 0);
+  }
+}  // tuneAsync()
+
+
+/// Start a seek without blocking for completion. Replicates _seek()
+/// minus the _waitEnd() call; use tuneComplete() to poll for STC.
+void SI4703::seekAsync(bool seekUp) {
+  uint16_t reg;
+
+  _readRegisters();
+  reg = registers[POWERCFG] & ~((1 << SKMODE) | (1 << SEEKUP));
+
+  if (seekUp)
+    reg |= (1 << SEEKUP);  // Set the Seek-up bit
+
+  reg |= (1 << SEEK);  // Start seek now
+
+  registers[POWERCFG] = reg;
+  _saveRegisters();
+  if (_sendRDS) {
+    _sendRDS(0, 0, 0, 0);
+  }
+}  // seekAsync()
+
+
+/// Poll for seek/tune completion. Returns true (and clears TUNE/SEEK) once
+/// STC is set, or immediately when force is true (used for timeouts).
+bool SI4703::tuneComplete(bool force) {
+  _readRegister0A();
+  if (!force && (registers[STATUSRSSI] & STC) == 0)
+    return false;
+
+  _readRegisters();
+  if (registers[STATUSRSSI] & SFBL)
+    DEBUG_STR("Seek limit hit");
+
+  registers[POWERCFG] &= ~(1 << SEEK);
+  registers[CHANNEL] &= ~(1 << TUNE);  // Clear the tune after a tune has completed
+  _saveRegisters();
+  return true;
+}  // tuneComplete()
 
 
 // ----- internal functions -----
