@@ -7,19 +7,23 @@
 
 AudioWAVServer wavServer(81);
 
+// Wraps the FIFO the WAV server reads from so the diagnostic below reports
+// real measured throughput instead of a dead byte counter.
+MeasuringStream measuredStream(bufferedStream);
+
 // Dedicated audio streaming task on Core 1 to avoid I2C blocking stalls.
 // Reads from the FIFO (filled by captureTask), never touches I2S directly.
 void audioTask(void *param) {
+  esp_task_wdt_add(NULL);  // watch this task too - a wedged copy() now panics/reboots
   static uint32_t lastDiag = 0;
-  static uint32_t totalBytes = 0;
   for (;;) {
     bool active = wavServer.copy();
-    // Print bytes-per-second every 5s so we can see if data is flowing
+    esp_task_wdt_reset();
+    // Print measured throughput every 5s so we can see if data is flowing
     if (millis() - lastDiag >= 5000) {
-      Serial.printf("[audio] streaming: %s, ~%u B/s\n",
+      Serial.printf("[audio] streaming: %s, %d kbytes/sec\n",
                     active ? "active" : "idle",
-                    totalBytes / 5);
-      totalBytes = 0;
+                    measuredStream.bytesPerSecond() / 1000);
       lastDiag = millis();
     }
     vTaskDelay(1);
@@ -30,8 +34,10 @@ void audioTask(void *param) {
 // wins the core when the TCP socket stalls - a stalled listener skips ahead
 // instead of causing a DMA overrun.
 void captureTask(void *param) {
+  esp_task_wdt_add(NULL);  // watch this task too
   for (;;) {
     captureAudio();
+    esp_task_wdt_reset();
     vTaskDelay(1);
   }
 }
@@ -67,15 +73,11 @@ void setup() {
 
   initWebServer();
 
-  wavServer.begin(bufferedStream, audioInfo);
+  wavServer.begin(measuredStream, audioInfo);
 
-  // Launch audio capture + streaming on Core 1, isolated from I2C/web on Core 0.
-  // captureTask (priority 3) drains I2S into the FIFO; audioTask (priority 2)
-  // serves the FIFO to the TCP client.
-  xTaskCreatePinnedToCore(captureTask, "capture", 4096, NULL, 3, NULL, 1);
-  xTaskCreatePinnedToCore(audioTask, "audio", 4096, NULL, 2, NULL, 1);
-
-  // Enable hardware watchdog (10s timeout, auto-reset on hang)
+  // Enable hardware watchdog (10s timeout, auto-reset on hang) before
+  // launching the worker tasks below, since each subscribes itself on entry
+  // (esp_task_wdt_add adds the *calling* task).
   esp_task_wdt_config_t wdt_config = {
     .timeout_ms = 10000,
     .idle_core_mask = 0,
@@ -83,6 +85,12 @@ void setup() {
   };
   esp_task_wdt_init(&wdt_config);
   esp_task_wdt_add(NULL);
+
+  // Launch audio capture + streaming on Core 1, isolated from I2C/web on Core 0.
+  // captureTask (priority 3) drains I2S into the FIFO; audioTask (priority 2)
+  // serves the FIFO to the TCP client.
+  xTaskCreatePinnedToCore(captureTask, "capture", 4096, NULL, 3, NULL, 1);
+  xTaskCreatePinnedToCore(audioTask, "audio", 4096, NULL, 2, NULL, 1);
 
   logMemoryStats();
 
