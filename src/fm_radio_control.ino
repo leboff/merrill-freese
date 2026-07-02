@@ -7,7 +7,8 @@
 
 AudioWAVServer wavServer(81);
 
-// Dedicated audio streaming task on Core 1 to avoid I2C blocking stalls
+// Dedicated audio streaming task on Core 1 to avoid I2C blocking stalls.
+// Reads from the FIFO (filled by captureTask), never touches I2S directly.
 void audioTask(void *param) {
   static uint32_t lastDiag = 0;
   static uint32_t totalBytes = 0;
@@ -21,6 +22,16 @@ void audioTask(void *param) {
       totalBytes = 0;
       lastDiag = millis();
     }
+    vTaskDelay(1);
+  }
+}
+
+// Drains I2S into the FIFO. Higher priority than audioTask so capture always
+// wins the core when the TCP socket stalls - a stalled listener skips ahead
+// instead of causing a DMA overrun.
+void captureTask(void *param) {
+  for (;;) {
+    captureAudio();
     vTaskDelay(1);
   }
 }
@@ -56,9 +67,12 @@ void setup() {
 
   initWebServer();
 
-  wavServer.begin(i2sStream, audioInfo);
+  wavServer.begin(bufferedStream, audioInfo);
 
-  // Launch audio streaming on Core 1, isolated from I2C/web on Core 0
+  // Launch audio capture + streaming on Core 1, isolated from I2C/web on Core 0.
+  // captureTask (priority 3) drains I2S into the FIFO; audioTask (priority 2)
+  // serves the FIFO to the TCP client.
+  xTaskCreatePinnedToCore(captureTask, "capture", 4096, NULL, 3, NULL, 1);
   xTaskCreatePinnedToCore(audioTask, "audio", 4096, NULL, 2, NULL, 1);
 
   // Enable hardware watchdog (10s timeout, auto-reset on hang)
@@ -69,6 +83,8 @@ void setup() {
   };
   esp_task_wdt_init(&wdt_config);
   esp_task_wdt_add(NULL);
+
+  logMemoryStats();
 
   Serial.println("Setup complete");
   AudioToolsLogger.begin(Serial, AudioToolsLogLevel::Warning);
