@@ -47,6 +47,7 @@ void setup() {
 
   WiFi.setAutoReconnect(true);   // ESP32 SDK retries the AP automatically
   WiFi.persistent(false);        // don't wear flash rewriting credentials
+  WiFi.setSleep(false);          // disable modem power save - critical for streaming latency
 
   // Initialize FM Radio
   initRadio();
