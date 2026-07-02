@@ -112,9 +112,14 @@ void loop() {
   // Handle Web Server requests
   webServer.handleClient();
 
-  // RDS check every 40ms
+  // Poll the non-blocking tune/seek state machine. No-op when idle;
+  // otherwise a cheap 2-byte I2C read each iteration.
+  pollTuneComplete();
+
+  // RDS check every 40ms; suppressed while a tune/seek is in flight since
+  // RDS data is garbage mid-tune.
   static unsigned long lastRDSCheck = 0;
-  if (millis() - lastRDSCheck >= 40) {
+  if (tuneState == TUNE_IDLE && millis() - lastRDSCheck >= 40) {
     radio.checkRDS();
     lastRDSCheck = millis();
   }

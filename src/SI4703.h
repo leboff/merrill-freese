@@ -75,6 +75,12 @@ public:
   void seekUp(bool toNextSender = true);    // start seek mode upwards
   void seekDown(bool toNextSender = true);  // start seek mode downwards
 
+  // ----- non-blocking tune/seek -----
+
+  void tuneAsync(RADIO_FREQ newF);      // start a tune, returns immediately (no _waitEnd())
+  void seekAsync(bool seekUp = true);   // start a seek, returns immediately (no _waitEnd())
+  bool tuneComplete(bool force = false);  // poll STC; on completion (or force) clears TUNE/SEEK and returns true
+
   void checkRDS();  // read RDS data from the current station and process when data available.
 
   // ----- combined status functions -----

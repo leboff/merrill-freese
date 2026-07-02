@@ -10,6 +10,10 @@ SI4703 radio; // Create an instance of the SI4703 class
 int channel = 9410; // Frequency in kHz
 int volume = 5;    // Initial volume level
 
+TuneState tuneState = TUNE_IDLE;
+static unsigned long tuneStartTime = 0;
+static const unsigned long TUNE_TIMEOUT_MS = 4000;
+
 // Add these lines:
 String rdsServiceName = "";
 String rdsText = "";
@@ -73,6 +77,36 @@ void seekRadioUp() {
 void seekRadioDown() {
   radio.seekDown();
   channel = radio.getFrequency();
+}
+
+bool startTune(int newChannel) {
+  if (tuneState != TUNE_IDLE)
+    return false;
+  channel = newChannel;
+  radio.tuneAsync(channel);
+  tuneState = TUNE_TUNING;
+  tuneStartTime = millis();
+  return true;
+}
+
+bool startSeek(bool up) {
+  if (tuneState != TUNE_IDLE)
+    return false;
+  radio.seekAsync(up);
+  tuneState = TUNE_SEEKING;
+  tuneStartTime = millis();
+  return true;
+}
+
+void pollTuneComplete() {
+  if (tuneState == TUNE_IDLE)
+    return;
+
+  bool timedOut = (millis() - tuneStartTime) > TUNE_TIMEOUT_MS;
+  if (radio.tuneComplete(timedOut)) {
+    channel = radio.getFrequency();
+    tuneState = TUNE_IDLE;
+  }
 }
 
 String getRDSData() {
